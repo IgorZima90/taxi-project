@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import taxi.exception.DataProcessingException;
 import taxi.lib.Dao;
 import taxi.model.Car;
@@ -18,6 +20,7 @@ import taxi.util.ConnectionUtil;
 
 @Dao
 public class CarDaoImpl implements CarDao {
+    private static final Logger logger = LogManager.getLogger(CarDaoImpl.class);
     private static final int ZERO_PLACEHOLDER = 0;
     private static final int SHIFT = 2;
 
@@ -37,8 +40,11 @@ public class CarDaoImpl implements CarDao {
                 car.setId(resultSet.getObject(1, Long.class));
             }
         } catch (SQLException e) {
+            logger.error("Can't create car with manufacturer id = {} car model = {}",
+                    car.getManufacturer().getId(), car.getModel());
             throw new DataProcessingException("Can't create car " + car, e);
         }
+        logger.info("Car was added to data base, with car_id = {}", car.getId());
         insertAllDrivers(car);
         return car;
     }
@@ -112,6 +118,7 @@ public class CarDaoImpl implements CarDao {
         }
         deleteAllDriversExceptList(car);
         insertAllDrivers(car);
+        logger.info("car was update with car id = {}", car.getId());
         return car;
     }
 
@@ -125,6 +132,7 @@ public class CarDaoImpl implements CarDao {
             deleteCarStatement.setLong(1, id);
             return deleteCarStatement.executeUpdate() > 0;
         } catch (SQLException e) {
+            logger.error("car cant deleted with id = {}", id);
             throw new DataProcessingException("Can't delete car by id " + id, e);
         }
     }
